@@ -12,9 +12,11 @@ function SeekerDashboard() {
   const loadData = async () => {
     try {
       setLoading(true);
+
       await refreshUser();
 
       const res = await api.get("/applications/my/list");
+
       setApplications(res.data.applications || []);
     } catch {
       setApplications([]);
@@ -49,6 +51,7 @@ function SeekerDashboard() {
 
       {/* Header */}
       <div className="bg-white rounded-2xl shadow border p-6">
+
         <h1 className="text-3xl font-bold">
           Welcome, {user?.fullName}
         </h1>
@@ -64,6 +67,7 @@ function SeekerDashboard() {
             <p className="text-sm text-gray-600">
               Free Applications Left
             </p>
+
             <p className="text-2xl font-bold text-blue-700">
               {user?.freeApplicationsLeft}
             </p>
@@ -73,6 +77,7 @@ function SeekerDashboard() {
             <p className="text-sm text-gray-600">
               Plan
             </p>
+
             <p className="text-2xl font-bold text-green-700 capitalize">
               {user?.premiumPlan}
             </p>
@@ -82,13 +87,14 @@ function SeekerDashboard() {
             <p className="text-sm text-gray-600">
               Applications
             </p>
+
             <p className="text-2xl font-bold text-purple-700">
               {applications.length}
             </p>
           </div>
         </div>
 
-        {/* Profile Strength */}
+        {/* Strength */}
         <div className="mt-8">
           <div className="flex justify-between text-sm font-semibold">
             <span>Profile Strength</span>
@@ -107,32 +113,36 @@ function SeekerDashboard() {
           </p>
         </div>
 
-        {/* Profile Card */}
+        {/* Profile */}
         <div className="mt-8 bg-gray-50 rounded-2xl p-5 border">
           <h2 className="text-xl font-bold">
             My Professional Profile
           </h2>
 
           <div className="grid md:grid-cols-2 gap-4 mt-4 text-sm">
-
             <p><strong>Location:</strong> {user?.location || "Not added"}</p>
             <p><strong>Skills:</strong> {user?.skills || "Not added"}</p>
             <p><strong>Experience:</strong> {user?.experience || "Not added"}</p>
             <p><strong>Education:</strong> {user?.education || "Not added"}</p>
             <p><strong>Expected Salary:</strong> {user?.expectedSalary || "Not added"}</p>
             <p><strong>Availability:</strong> {user?.availability || "Not added"}</p>
-
           </div>
 
           <div className="mt-4 flex flex-wrap gap-3">
 
-            <button className="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700">
+            <Link
+              to="/edit-profile"
+              className="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700"
+            >
               Edit Profile
-            </button>
+            </Link>
 
-            <button className="bg-yellow-500 text-white px-5 py-3 rounded-lg hover:bg-yellow-600">
+            <Link
+              to="/jobs"
+              className="bg-yellow-500 text-white px-5 py-3 rounded-lg hover:bg-yellow-600"
+            >
               Upgrade Premium
-            </button>
+            </Link>
 
             {user?.isVerified && (
               <span className="px-4 py-3 rounded-lg bg-blue-100 text-blue-700 font-semibold">
@@ -149,8 +159,7 @@ function SeekerDashboard() {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-6">
           <Link
             to="/jobs"
             className="bg-orange-500 text-white px-5 py-3 rounded-lg hover:bg-orange-600"
@@ -230,6 +239,7 @@ function SeekerDashboard() {
           </div>
         )}
       </div>
+
     </div>
   );
 }
