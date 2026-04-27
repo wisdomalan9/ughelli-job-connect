@@ -5,38 +5,23 @@ const {
   register,
   login,
   getProfile,
+  updateProfile,
 } = require("../controllers/authController");
 
 const {
   protect,
 } = require("../middleware/auth");
 
-/* =========================
-   PUBLIC ROUTES
-========================= */
+/* PUBLIC ROUTES */
 
-/* Register user */
-router.post(
-  "/register",
-  register
-);
+router.post("/register", register);
+router.post("/login", login);
 
-/* Login user */
-router.post(
-  "/login",
-  login
-);
+/* PRIVATE ROUTES */
 
-/* =========================
-   PRIVATE ROUTES
-========================= */
+router.get("/me", protect, getProfile);
 
-/* Current logged-in user */
-router.get(
-  "/me",
-  protect,
-  getProfile
-);
+/* Update profile */
+router.put("/update-profile", protect, updateProfile);
 
-module.exports =
-  router;
+module.exports = router;

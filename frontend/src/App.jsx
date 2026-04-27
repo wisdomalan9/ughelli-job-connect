@@ -17,6 +17,9 @@ import SeekerDashboard from "./pages/SeekerDashboard.jsx";
 import EmployerDashboard from "./pages/EmployerDashboard.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 
+/* New Profile Page */
+import EditProfilePage from "./pages/EditProfilePage.jsx";
+
 /* Shared */
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 
@@ -27,23 +30,15 @@ function App() {
 
       <main className="flex-1">
         <Routes>
-          {/* Public */}
+
+          {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/jobs" element={<JobsPage />} />
-          <Route
-            path="/jobs/:id"
-            element={<JobDetailsPage />}
-          />
-          <Route
-            path="/login"
-            element={<LoginPage />}
-          />
-          <Route
-            path="/register"
-            element={<RegisterPage />}
-          />
+          <Route path="/jobs/:id" element={<JobDetailsPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
-          {/* Seeker */}
+          {/* Seeker Routes */}
           <Route
             path="/dashboard"
             element={
@@ -53,7 +48,16 @@ function App() {
             }
           />
 
-          {/* Employer */}
+          <Route
+            path="/edit-profile"
+            element={
+              <ProtectedRoute role="seeker">
+                <EditProfilePage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Employer Routes */}
           <Route
             path="/employer"
             element={
@@ -63,7 +67,7 @@ function App() {
             }
           />
 
-          {/* Admin */}
+          {/* Admin Routes */}
           <Route
             path="/admin"
             element={
@@ -74,10 +78,8 @@ function App() {
           />
 
           {/* 404 */}
-          <Route
-            path="*"
-            element={<NotFoundPage />}
-          />
+          <Route path="*" element={<NotFoundPage />} />
+
         </Routes>
       </main>
 
