@@ -17,6 +17,9 @@ import SeekerDashboard from "./pages/SeekerDashboard.jsx";
 import EmployerDashboard from "./pages/EmployerDashboard.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 
+/* Admin Pages */
+import AdminUsersPage from "./pages/admin/AdminUsersPage.jsx";
+
 /* New Pages */
 import EditProfilePage from "./pages/EditProfilePage.jsx";
 import UpgradePage from "./pages/UpgradePage.jsx";
@@ -39,10 +42,10 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* NEW UPGRADE ROUTE */}
+          {/* UPGRADE */}
           <Route path="/upgrade" element={<UpgradePage />} />
 
-          {/* SEEKER ROUTES */}
+          {/* SEEKER */}
           <Route
             path="/dashboard"
             element={
@@ -61,7 +64,7 @@ function App() {
             }
           />
 
-          {/* EMPLOYER ROUTES */}
+          {/* EMPLOYER */}
           <Route
             path="/employer"
             element={
@@ -71,12 +74,21 @@ function App() {
             }
           />
 
-          {/* ADMIN ROUTES */}
+          {/* ADMIN */}
           <Route
             path="/admin"
             element={
               <ProtectedRoute role="admin">
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute role="admin">
+                <AdminUsersPage />
               </ProtectedRoute>
             }
           />
