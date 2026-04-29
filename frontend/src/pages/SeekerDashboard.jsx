@@ -12,11 +12,9 @@ function SeekerDashboard() {
   const loadData = async () => {
     try {
       setLoading(true);
-
       await refreshUser();
 
       const res = await api.get("/applications/my/list");
-
       setApplications(res.data.applications || []);
     } catch {
       setApplications([]);
@@ -49,7 +47,7 @@ function SeekerDashboard() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
 
-      {/* Header */}
+      {/* HEADER */}
       <div className="bg-white rounded-2xl shadow border p-6">
 
         <h1 className="text-3xl font-bold">
@@ -60,14 +58,13 @@ function SeekerDashboard() {
           Build a strong profile to get hired faster.
         </p>
 
-        {/* Stats */}
+        {/* STATS */}
         <div className="grid md:grid-cols-3 gap-4 mt-6">
 
           <div className="bg-blue-50 rounded-xl p-4">
             <p className="text-sm text-gray-600">
               Free Applications Left
             </p>
-
             <p className="text-2xl font-bold text-blue-700">
               {user?.freeApplicationsLeft}
             </p>
@@ -77,7 +74,6 @@ function SeekerDashboard() {
             <p className="text-sm text-gray-600">
               Plan
             </p>
-
             <p className="text-2xl font-bold text-green-700 capitalize">
               {user?.premiumPlan}
             </p>
@@ -87,14 +83,14 @@ function SeekerDashboard() {
             <p className="text-sm text-gray-600">
               Applications
             </p>
-
             <p className="text-2xl font-bold text-purple-700">
               {applications.length}
             </p>
           </div>
+
         </div>
 
-        {/* Strength */}
+        {/* PROFILE STRENGTH */}
         <div className="mt-8">
           <div className="flex justify-between text-sm font-semibold">
             <span>Profile Strength</span>
@@ -105,7 +101,7 @@ function SeekerDashboard() {
             <div
               className="bg-green-500 h-3 rounded-full"
               style={{ width: `${strength}%` }}
-            ></div>
+            />
           </div>
 
           <p className="text-sm text-gray-500 mt-2">
@@ -113,22 +109,25 @@ function SeekerDashboard() {
           </p>
         </div>
 
-        {/* Profile */}
+        {/* PROFILE SUMMARY */}
         <div className="mt-8 bg-gray-50 rounded-2xl p-5 border">
           <h2 className="text-xl font-bold">
             My Professional Profile
           </h2>
 
           <div className="grid md:grid-cols-2 gap-4 mt-4 text-sm">
+
             <p><strong>Location:</strong> {user?.location || "Not added"}</p>
             <p><strong>Skills:</strong> {user?.skills || "Not added"}</p>
             <p><strong>Experience:</strong> {user?.experience || "Not added"}</p>
             <p><strong>Education:</strong> {user?.education || "Not added"}</p>
             <p><strong>Expected Salary:</strong> {user?.expectedSalary || "Not added"}</p>
             <p><strong>Availability:</strong> {user?.availability || "Not added"}</p>
+
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-3">
+          {/* ACTION BUTTONS */}
+          <div className="mt-6 flex flex-wrap gap-3">
 
             <Link
               to="/edit-profile"
@@ -138,7 +137,7 @@ function SeekerDashboard() {
             </Link>
 
             <Link
-              to="/jobs"
+              to="/upgrade"
               className="bg-yellow-500 text-white px-5 py-3 rounded-lg hover:bg-yellow-600"
             >
               Upgrade Premium
@@ -159,6 +158,7 @@ function SeekerDashboard() {
           </div>
         </div>
 
+        {/* QUICK ACTION */}
         <div className="mt-6">
           <Link
             to="/jobs"
@@ -167,9 +167,10 @@ function SeekerDashboard() {
             Browse Jobs
           </Link>
         </div>
+
       </div>
 
-      {/* Applications */}
+      {/* APPLICATIONS */}
       <div className="mt-10">
         <h2 className="text-2xl font-bold">
           My Applications
@@ -238,6 +239,7 @@ function SeekerDashboard() {
             ))}
           </div>
         )}
+
       </div>
 
     </div>

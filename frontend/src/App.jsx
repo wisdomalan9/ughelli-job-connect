@@ -17,8 +17,9 @@ import SeekerDashboard from "./pages/SeekerDashboard.jsx";
 import EmployerDashboard from "./pages/EmployerDashboard.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 
-/* New Profile Page */
+/* New Pages */
 import EditProfilePage from "./pages/EditProfilePage.jsx";
+import UpgradePage from "./pages/UpgradePage.jsx";
 
 /* Shared */
 import NotFoundPage from "./pages/NotFoundPage.jsx";
@@ -31,14 +32,17 @@ function App() {
       <main className="flex-1">
         <Routes>
 
-          {/* Public Routes */}
+          {/* PUBLIC ROUTES */}
           <Route path="/" element={<HomePage />} />
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/jobs/:id" element={<JobDetailsPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* Seeker Routes */}
+          {/* NEW UPGRADE ROUTE */}
+          <Route path="/upgrade" element={<UpgradePage />} />
+
+          {/* SEEKER ROUTES */}
           <Route
             path="/dashboard"
             element={
@@ -57,7 +61,7 @@ function App() {
             }
           />
 
-          {/* Employer Routes */}
+          {/* EMPLOYER ROUTES */}
           <Route
             path="/employer"
             element={
@@ -67,7 +71,7 @@ function App() {
             }
           />
 
-          {/* Admin Routes */}
+          {/* ADMIN ROUTES */}
           <Route
             path="/admin"
             element={
