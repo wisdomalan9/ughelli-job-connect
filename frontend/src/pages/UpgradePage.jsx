@@ -1,24 +1,21 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import api from "../api/axios";
 
 function UpgradePage() {
   const phone = "2349167404311";
 
-  const openWhatsApp = (plan, price) => {
-    const message =
-      `Hello Admin, I want to upgrade to ${plan} plan for ${price}.%0A` +
-      `Please guide me on payment and activation.%0A%0A` +
-      `Ughelli Job Connect`;
-
-    window.open(
-      `https://wa.me/${phone}?text=${message}`,
-      "_blank"
-    );
-  };
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   const plans = [
     {
       name: "FREE",
       price: "₦0",
+      amount: 0,
+      type: "free",
       color: "border-gray-300",
       button: "bg-gray-600",
       benefits: [
@@ -30,6 +27,8 @@ function UpgradePage() {
     {
       name: "PLUS",
       price: "₦2,000",
+      amount: 2000,
+      type: "premium_plus",
       color: "border-blue-400",
       button: "bg-blue-600",
       benefits: [
@@ -41,6 +40,8 @@ function UpgradePage() {
     {
       name: "PREMIUM",
       price: "₦5,000",
+      amount: 5000,
+      type: "premium_pro",
       color: "border-yellow-400",
       button: "bg-yellow-500",
       benefits: [
@@ -52,6 +53,8 @@ function UpgradePage() {
     {
       name: "ELITE",
       price: "₦10,000",
+      amount: 10000,
+      type: "premium_elite",
       color: "border-purple-400",
       button: "bg-purple-600",
       benefits: [
@@ -61,6 +64,55 @@ function UpgradePage() {
       ],
     },
   ];
+
+  /* =========================
+     OPEN WHATSAPP
+  ========================= */
+  const openWhatsApp = (plan) => {
+    setSelectedPlan(plan);
+
+    const message =
+      `Hello Admin, I want to upgrade to ${plan.name} plan (${plan.price}).%0A` +
+      `Please send payment details.`;
+
+    window.open(
+      `https://wa.me/${phone}?text=${message}`,
+      "_blank"
+    );
+  };
+
+  /* =========================
+     SUBMIT PAYMENT
+  ========================= */
+  const submitPayment = async () => {
+    if (!selectedPlan) return;
+
+    try {
+      setLoading(true);
+      setError("");
+      setMessage("");
+
+      await api.post("/payments", {
+        type: selectedPlan.type,
+        amount: selectedPlan.amount,
+        planName: selectedPlan.name,
+        note: "User confirmed payment via WhatsApp",
+      });
+
+      setMessage(
+        "✅ Payment submitted! Admin will verify shortly."
+      );
+
+      setSelectedPlan(null);
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Failed to submit payment."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -72,9 +124,22 @@ function UpgradePage() {
         </h1>
 
         <p className="mt-4 text-gray-600 text-lg">
-          Get hired faster, apply more, and stand out to employers.
+          Pay via WhatsApp, then confirm below.
         </p>
       </div>
+
+      {/* Alerts */}
+      {message && (
+        <div className="mt-6 bg-green-100 text-green-700 p-4 rounded-lg text-center">
+          {message}
+        </div>
+      )}
+
+      {error && (
+        <div className="mt-6 bg-red-100 text-red-700 p-4 rounded-lg text-center">
+          {error}
+        </div>
+      )}
 
       {/* Plans */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
@@ -106,17 +171,28 @@ function UpgradePage() {
                 Continue Free
               </Link>
             ) : (
-              <button
-                onClick={() =>
-                  openWhatsApp(
-                    plan.name,
-                    plan.price
-                  )
-                }
-                className={`mt-6 text-white py-3 rounded-lg hover:opacity-90 ${plan.button}`}
-              >
-                Upgrade Now
-              </button>
+              <>
+                <button
+                  onClick={() =>
+                    openWhatsApp(plan)
+                  }
+                  className={`mt-6 text-white py-3 rounded-lg hover:opacity-90 ${plan.button}`}
+                >
+                  Pay via WhatsApp
+                </button>
+
+                {selectedPlan?.name === plan.name && (
+                  <button
+                    onClick={submitPayment}
+                    disabled={loading}
+                    className="mt-3 bg-blue-600 text-white py-3 rounded-lg w-full"
+                  >
+                    {loading
+                      ? "Submitting..."
+                      : "I HAVE PAID"}
+                  </button>
+                )}
+              </>
             )}
           </div>
         ))}
@@ -136,9 +212,6 @@ function UpgradePage() {
             <h3 className="font-bold mt-2">
               Faster Hiring
             </h3>
-            <p className="text-gray-600 text-sm mt-2">
-              Premium users are noticed faster by employers.
-            </p>
           </div>
 
           <div>
@@ -146,9 +219,6 @@ function UpgradePage() {
             <h3 className="font-bold mt-2">
               Better Visibility
             </h3>
-            <p className="text-gray-600 text-sm mt-2">
-              Profiles rank higher in employer searches.
-            </p>
           </div>
 
           <div>
@@ -156,9 +226,6 @@ function UpgradePage() {
             <h3 className="font-bold mt-2">
               Trusted Platform
             </h3>
-            <p className="text-gray-600 text-sm mt-2">
-              Secure manual activation after payment confirmation.
-            </p>
           </div>
 
         </div>
