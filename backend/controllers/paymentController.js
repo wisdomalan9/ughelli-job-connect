@@ -123,34 +123,55 @@ const approvePayment = async (req, res, next) => {
     /* =========================
        PREMIUM LOGIC (UPDATED)
     ========================= */
-    if (user && payment.type.startsWith("premium")) {
-      let plan = "free";
-      let duration = 30;
+if (user) {
+  const rawPlan =
+    (payment.planName || payment.type || "").toLowerCase();
 
-      if (payment.type === "premium_plus") {
-        plan = "plus";
-      }
+  let plan = "free";
+  let duration = 30;
 
-      if (payment.type === "premium_pro") {
-        plan = "premium";
-      }
+  if (rawPlan.includes("plus")) {
+    plan = "plus";
+    duration = 30;
+  }
 
-      if (payment.type === "premium_elite") {
-        plan = "elite";
-        duration = 60;
-      }
+  if (rawPlan.includes("premium")) {
+    plan = "premium";
+    duration = 30;
+  }
 
-      const now = new Date();
-      const expiry = new Date(
-        now.getTime() + duration * 24 * 60 * 60 * 1000
-      );
+  if (rawPlan.includes("elite")) {
+    plan = "elite";
+    duration = 60;
+  }
 
-      user.premiumPlan = plan;
-      user.premiumExpiresAt = expiry;
+  // Only upgrade if it's a plan payment
+  if (plan !== "free") {
+    const now = new Date();
+    const expiry = new Date(
+      now.getTime() + duration * 24 * 60 * 60 * 1000
+    );
 
-      await user.save();
+    user.premiumPlan = plan;
+    user.premiumExpiresAt = expiry;
+
+    // Optional bonuses
+    if (plan === "plus") {
+      user.freeApplicationsLeft += 10;
     }
 
+    if (plan === "premium") {
+      user.freeApplicationsLeft += 25;
+    }
+
+    if (plan === "elite") {
+      user.freeApplicationsLeft += 50;
+      user.eliteVerified = true;
+    }
+
+    await user.save();
+  }
+}
     /* =========================
        JOB LOGIC
     ========================= */
