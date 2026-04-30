@@ -12,17 +12,17 @@ function SeekerDashboard() {
   /* =========================
      PLAN DISPLAY FIX
   ========================= */
-  const getPlanName = (user) => {
-    if (!user) return "Free";
+const getPlanName = (user) => {
+  if (!user) return "Free";
 
-    if (user.eliteVerified) return "Elite";
+  if (user.eliteVerified) return "Elite";
 
-    if (user.premiumPlan === "premium") return "Premium";
+  if (user.premiumPlan === "premium") return "Premium";
 
-    if (user.premiumPlan === "plus") return "Plus";
+  if (user.premiumPlan === "plus") return "Plus";
 
-    return "Free";
-  };
+  return "Free";
+};
 
   const loadData = async () => {
     try {
@@ -158,6 +158,12 @@ function SeekerDashboard() {
               Upgrade Premium
             </Link>
 
+<Link
+  to="/payments"
+  className="bg-gray-800 text-white px-5 py-3 rounded-lg hover:bg-gray-900"
+>
+  View Payments
+</Link>
             {user?.isVerified && (
               <span className="px-4 py-3 rounded-lg bg-blue-100 text-blue-700 font-semibold">
                 🔵 Verified

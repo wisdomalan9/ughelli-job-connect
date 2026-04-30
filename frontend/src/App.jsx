@@ -26,8 +26,9 @@ import UpgradePage from "./pages/UpgradePage.jsx";
 
 /* Shared */
 import NotFoundPage from "./pages/NotFoundPage.jsx";
+import PaymentHistoryPage from "./pages/PaymentHistoryPage.jsx";
 
-
+ 
 function App() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
@@ -93,6 +94,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+<Route
+  path="/payments"
+  element={
+    <ProtectedRoute role="seeker">
+      <PaymentHistoryPage />
+    </ProtectedRoute>
+  }
+/>
 
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />
