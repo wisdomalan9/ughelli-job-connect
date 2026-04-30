@@ -5,7 +5,6 @@ import api from "../api/axios";
 function UpgradePage() {
   const phone = "2349167404311";
 
-  const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -66,48 +65,41 @@ function UpgradePage() {
   ];
 
   /* =========================
-     OPEN WHATSAPP
+     HANDLE UPGRADE (FINAL)
   ========================= */
-  const openWhatsApp = (plan) => {
-    setSelectedPlan(plan);
-
-    const message =
-      `Hello Admin, I want to upgrade to ${plan.name} plan (${plan.price}).%0A` +
-      `Please send payment details.`;
-
-    window.open(
-      `https://wa.me/${phone}?text=${message}`,
-      "_blank"
-    );
-  };
-
-  /* =========================
-     SUBMIT PAYMENT
-  ========================= */
-  const submitPayment = async () => {
-    if (!selectedPlan) return;
-
+  const handleUpgrade = async (plan) => {
     try {
       setLoading(true);
       setError("");
       setMessage("");
 
+      /* STEP 1: SAVE PAYMENT */
       await api.post("/payments", {
-        type: selectedPlan.type,
-        amount: selectedPlan.amount,
-        planName: selectedPlan.name,
-        note: "User confirmed payment via WhatsApp",
+        type: plan.type,
+        amount: plan.amount,
+        planName: plan.name,
+        note: "User initiated upgrade",
       });
 
-      setMessage(
-        "✅ Payment submitted! Admin will verify shortly."
+      /* STEP 2: OPEN WHATSAPP */
+      const message =
+        `Hello Admin, I just initiated payment for ${plan.name} plan (${plan.price}).%0A` +
+        `Please provide payment details.%0A%0A` +
+        `Ughelli Job Connect`;
+
+      window.open(
+        `https://wa.me/${phone}?text=${message}`,
+        "_blank"
       );
 
-      setSelectedPlan(null);
+      setMessage(
+        "✅ Payment request submitted. Please complete payment on WhatsApp."
+      );
+
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Failed to submit payment."
+          "Failed to start upgrade."
       );
     } finally {
       setLoading(false);
@@ -124,7 +116,7 @@ function UpgradePage() {
         </h1>
 
         <p className="mt-4 text-gray-600 text-lg">
-          Pay via WhatsApp, then confirm below.
+          Start your upgrade and complete payment via WhatsApp.
         </p>
       </div>
 
@@ -171,28 +163,13 @@ function UpgradePage() {
                 Continue Free
               </Link>
             ) : (
-              <>
-                <button
-                  onClick={() =>
-                    openWhatsApp(plan)
-                  }
-                  className={`mt-6 text-white py-3 rounded-lg hover:opacity-90 ${plan.button}`}
-                >
-                  Pay via WhatsApp
-                </button>
-
-                {selectedPlan?.name === plan.name && (
-                  <button
-                    onClick={submitPayment}
-                    disabled={loading}
-                    className="mt-3 bg-blue-600 text-white py-3 rounded-lg w-full"
-                  >
-                    {loading
-                      ? "Submitting..."
-                      : "I HAVE PAID"}
-                  </button>
-                )}
-              </>
+              <button
+                onClick={() => handleUpgrade(plan)}
+                disabled={loading}
+                className={`mt-6 text-white py-3 rounded-lg hover:opacity-90 ${plan.button}`}
+              >
+                {loading ? "Processing..." : "Upgrade Now"}
+              </button>
             )}
           </div>
         ))}

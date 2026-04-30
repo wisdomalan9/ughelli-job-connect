@@ -9,6 +9,21 @@ function SeekerDashboard() {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  /* =========================
+     PLAN DISPLAY FIX
+  ========================= */
+  const getPlanName = (user) => {
+    if (!user) return "Free";
+
+    if (user.eliteVerified) return "Elite";
+
+    if (user.premiumPlan === "premium") return "Premium";
+
+    if (user.premiumPlan === "plus") return "Plus";
+
+    return "Free";
+  };
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -75,7 +90,7 @@ function SeekerDashboard() {
               Plan
             </p>
             <p className="text-2xl font-bold text-green-700 capitalize">
-              {user?.premiumPlan}
+              {getPlanName(user)}
             </p>
           </div>
 
