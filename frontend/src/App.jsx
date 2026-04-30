@@ -27,6 +27,7 @@ import UpgradePage from "./pages/UpgradePage.jsx";
 /* Shared */
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 
+
 function App() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
@@ -97,6 +98,7 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
 
         </Routes>
+
       </main>
 
       <Footer />

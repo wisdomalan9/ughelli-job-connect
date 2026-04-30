@@ -4,7 +4,11 @@ import api from "../../api/axios";
 function AdminUsersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
 
+  /* =========================
+     LOAD USERS
+  ========================= */
   const loadUsers = async () => {
     try {
       setLoading(true);
@@ -23,119 +27,158 @@ function AdminUsersPage() {
   }, []);
 
   /* =========================
-     ACTIONS
+     SUSPEND / UNSUSPEND
   ========================= */
-
-  const suspendUser = async (id) => {
-    if (!confirm("Suspend this user?")) return;
-
+  const toggleSuspend = async (id) => {
     try {
-      await api.put(`/admin/users/${id}/suspend`);
+      await api.put(`/admin/users/${id}/suspend`, {
+        reason: "Admin action",
+      });
+
+      setMessage("User status updated");
       loadUsers();
     } catch {
-      alert("Failed");
+      alert("Failed to update user");
     }
   };
 
+  /* =========================
+     VERIFY USER
+  ========================= */
   const verifyUser = async (id) => {
     try {
       await api.put(`/admin/users/${id}/verify`);
+      setMessage("User verified");
       loadUsers();
     } catch {
-      alert("Failed");
+      alert("Failed to verify user");
     }
   };
 
-  const makeAdmin = async (id) => {
-    if (!confirm("Make this user admin?")) return;
-
-    try {
-      await api.put(`/admin/users/${id}/make-admin`);
-      loadUsers();
-    } catch {
-      alert("Failed");
-    }
+  /* =========================
+     PLAN DISPLAY
+  ========================= */
+  const getPlanName = (user) => {
+    if (user.eliteVerified) return "Elite";
+    if (user.premiumPlan === "premium") return "Premium";
+    if (user.premiumPlan === "plus") return "Plus";
+    return "Free";
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold mb-6">
-        User Management
+
+      <h1 className="text-3xl font-bold">
+        Admin Users Management
       </h1>
 
-      {loading && <p>Loading...</p>}
+      <p className="text-gray-600 mt-2">
+        Control all platform users, plans and verification.
+      </p>
 
-      {!loading && users.length === 0 && (
-        <p>No users found.</p>
+      {message && (
+        <div className="mt-5 bg-green-100 text-green-700 p-4 rounded-lg">
+          {message}
+        </div>
       )}
 
-      <div className="grid gap-4">
-        {users.map((user) => (
-          <div
-            key={user._id}
-            className="bg-white p-5 rounded-xl shadow border"
-          >
-            <div className="flex flex-col md:flex-row md:justify-between gap-4">
+      {/* LOADING */}
+      {loading && (
+        <div className="py-10 text-center font-semibold">
+          Loading users...
+        </div>
+      )}
 
-              {/* USER INFO */}
-              <div>
-                <p className="font-bold text-lg">
-                  {user.fullName}
-                </p>
+      {/* USERS TABLE */}
+      {!loading && (
+        <div className="mt-8 overflow-x-auto bg-white shadow border rounded-2xl">
 
-                <p className="text-sm text-gray-500">
-                  {user.email}
-                </p>
+          <table className="min-w-full text-sm">
 
-                <p className="text-sm">
-                  Role: {user.role}
-                </p>
+            <thead className="bg-gray-100 text-gray-700">
+              <tr>
+                <th className="px-4 py-3 text-left">Name</th>
+                <th className="px-4 py-3 text-left">Email</th>
+                <th className="px-4 py-3 text-left">Role</th>
+                <th className="px-4 py-3 text-left">Plan</th>
+                <th className="px-4 py-3 text-left">Applications</th>
+                <th className="px-4 py-3 text-left">Joined</th>
+                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-left">Actions</th>
+              </tr>
+            </thead>
 
-                <p className="text-sm">
-                  Plan: {user.premiumPlan}
-                </p>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user._id} className="border-t">
 
-                <p className="text-sm">
-                  Verified: {user.isVerified ? "Yes" : "No"}
-                </p>
+                  <td className="px-4 py-3">
+                    {user.fullName}
+                  </td>
 
-                <p className="text-sm">
-                  Status: {user.isSuspended ? "Suspended" : "Active"}
-                </p>
-              </div>
+                  <td className="px-4 py-3">
+                    {user.email}
+                  </td>
 
-              {/* ACTIONS */}
-              <div className="flex flex-wrap gap-2">
+                  <td className="px-4 py-3 capitalize">
+                    {user.role}
+                  </td>
 
-                <button
-                  onClick={() => suspendUser(user._id)}
-                  className="bg-red-600 text-white px-3 py-2 rounded"
-                >
-                  {user.isSuspended ? "Unsuspend" : "Suspend"}
-                </button>
+                  <td className="px-4 py-3">
+                    <span className="font-semibold">
+                      {getPlanName(user)}
+                    </span>
+                  </td>
 
-                <button
-                  onClick={() => verifyUser(user._id)}
-                  className="bg-blue-600 text-white px-3 py-2 rounded"
-                >
-                  {user.isVerified ? "Unverify" : "Verify"}
-                </button>
+                  <td className="px-4 py-3">
+                    {user.freeApplicationsLeft}
+                  </td>
 
-                {user.role !== "admin" && (
-                  <button
-                    onClick={() => makeAdmin(user._id)}
-                    className="bg-purple-600 text-white px-3 py-2 rounded"
-                  >
-                    Make Admin
-                  </button>
-                )}
+                  <td className="px-4 py-3">
+                    {new Date(user.createdAt).toLocaleDateString()}
+                  </td>
 
-              </div>
+                  <td className="px-4 py-3">
+                    {user.isSuspended ? (
+                      <span className="text-red-600 font-semibold">
+                        Suspended
+                      </span>
+                    ) : (
+                      <span className="text-green-600 font-semibold">
+                        Active
+                      </span>
+                    )}
+                  </td>
 
-            </div>
-          </div>
-        ))}
-      </div>
+                  <td className="px-4 py-3 space-x-2">
+
+                    <button
+                      onClick={() => toggleSuspend(user._id)}
+                      className="bg-red-500 text-white px-3 py-1 rounded"
+                    >
+                      {user.isSuspended ? "Unsuspend" : "Suspend"}
+                    </button>
+
+                    {!user.isVerified && (
+                      <button
+                        onClick={() => verifyUser(user._id)}
+                        className="bg-blue-600 text-white px-3 py-1 rounded"
+                      >
+                        Verify
+                      </button>
+                    )}
+
+                  </td>
+
+                </tr>
+              ))}
+            </tbody>
+
+          </table>
+
+        </div>
+      )}
+
     </div>
   );
 }
