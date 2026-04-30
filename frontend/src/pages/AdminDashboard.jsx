@@ -14,21 +14,21 @@ function AdminDashboard() {
   const [message, setMessage] = useState("");
 
   /* =========================
-     LOAD DATA
+     LOAD DATA (FIXED)
   ========================= */
   const loadData = async () => {
     try {
       setLoading(true);
 
       const [statsRes, payRes] = await Promise.all([
-        api.get("/payments/stats"),
-        api.get("/payments"),
+        api.get("/payments/admin/stats"),
+        api.get("/payments/admin/list"),
       ]);
 
       setStats(statsRes.data.stats || {});
       setPayments(payRes.data.payments || []);
     } catch (err) {
-      console.log(err);
+      console.log("Admin error:", err);
       setPayments([]);
     } finally {
       setLoading(false);
@@ -45,11 +45,10 @@ function AdminDashboard() {
   const approve = async (id) => {
     try {
       await api.put(`/payments/${id}/approve`);
-
       setMessage("Payment approved.");
-
       loadData();
-    } catch {
+    } catch (err) {
+      console.log(err);
       alert("Failed to approve payment");
     }
   };
@@ -59,11 +58,10 @@ function AdminDashboard() {
       await api.put(`/payments/${id}/reject`, {
         reason: "Rejected by admin",
       });
-
       setMessage("Payment rejected.");
-
       loadData();
-    } catch {
+    } catch (err) {
+      console.log(err);
       alert("Failed to reject payment");
     }
   };
@@ -85,42 +83,32 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* =========================
-          STATS
-      ========================= */}
+      {/* STATS */}
       <div className="grid md:grid-cols-4 gap-4 mt-8">
 
         <div className="bg-white rounded-2xl shadow border p-5">
-          <p className="text-sm text-gray-500">
-            Revenue
-          </p>
+          <p className="text-sm text-gray-500">Revenue</p>
           <p className="text-2xl font-bold text-green-700">
             ₦{stats.revenue || 0}
           </p>
         </div>
 
         <div className="bg-white rounded-2xl shadow border p-5">
-          <p className="text-sm text-gray-500">
-            Approved
-          </p>
+          <p className="text-sm text-gray-500">Approved</p>
           <p className="text-2xl font-bold text-blue-700">
             {stats.approved || 0}
           </p>
         </div>
 
         <div className="bg-white rounded-2xl shadow border p-5">
-          <p className="text-sm text-gray-500">
-            Pending
-          </p>
+          <p className="text-sm text-gray-500">Pending</p>
           <p className="text-2xl font-bold text-yellow-600">
             {stats.pending || 0}
           </p>
         </div>
 
         <div className="bg-white rounded-2xl shadow border p-5">
-          <p className="text-sm text-gray-500">
-            Rejected
-          </p>
+          <p className="text-sm text-gray-500">Rejected</p>
           <p className="text-2xl font-bold text-red-600">
             {stats.rejected || 0}
           </p>
@@ -128,9 +116,7 @@ function AdminDashboard() {
 
       </div>
 
-      {/* =========================
-          PAYMENTS
-      ========================= */}
+      {/* PAYMENTS */}
       <div className="mt-10">
         <h2 className="text-2xl font-bold">
           Submitted Payments
