@@ -10,20 +10,39 @@ function SeekerDashboard() {
   const [loading, setLoading] = useState(true);
 
   /* =========================
-     PLAN DISPLAY FIX
+     PLAN DISPLAY
   ========================= */
-const getPlanName = (user) => {
-  if (!user) return "Free";
+  const getPlanName = (user) => {
+    if (!user) return "Free";
 
-  if (user.eliteVerified) return "Elite";
+    if (user.eliteVerified) return "Elite";
+    if (user.premiumPlan === "premium") return "Premium";
+    if (user.premiumPlan === "plus") return "Plus";
 
-  if (user.premiumPlan === "premium") return "Premium";
+    return "Free";
+  };
 
-  if (user.premiumPlan === "plus") return "Plus";
+  /* =========================
+     DAYS REMAINING
+  ========================= */
+  const getDaysRemaining = (expiryDate) => {
+    if (!expiryDate) return null;
 
-  return "Free";
-};
+    const now = new Date();
+    const expiry = new Date(expiryDate);
 
+    const diff = expiry - now;
+
+    if (diff <= 0) return 0;
+
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  };
+
+  const daysLeft = getDaysRemaining(user?.premiumExpiresAt);
+
+  /* =========================
+     LOAD DATA
+  ========================= */
   const loadData = async () => {
     try {
       setLoading(true);
@@ -42,6 +61,9 @@ const getPlanName = (user) => {
     loadData();
   }, []);
 
+  /* =========================
+     BADGE COLORS
+  ========================= */
   const badgeColor = (status) => {
     switch (status) {
       case "hired":
@@ -62,7 +84,9 @@ const getPlanName = (user) => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
 
-      {/* HEADER */}
+      {/* =========================
+          HEADER
+      ========================= */}
       <div className="bg-white rounded-2xl shadow border p-6">
 
         <h1 className="text-3xl font-bold">
@@ -73,9 +97,12 @@ const getPlanName = (user) => {
           Build a strong profile to get hired faster.
         </p>
 
-        {/* STATS */}
+        {/* =========================
+            STATS
+        ========================= */}
         <div className="grid md:grid-cols-3 gap-4 mt-6">
 
+          {/* Applications Left */}
           <div className="bg-blue-50 rounded-xl p-4">
             <p className="text-sm text-gray-600">
               Free Applications Left
@@ -85,15 +112,42 @@ const getPlanName = (user) => {
             </p>
           </div>
 
+          {/* Plan */}
           <div className="bg-green-50 rounded-xl p-4">
             <p className="text-sm text-gray-600">
               Plan
             </p>
+
             <p className="text-2xl font-bold text-green-700 capitalize">
               {getPlanName(user)}
             </p>
+
+            {daysLeft !== null && (
+              <p className="text-sm text-gray-600 mt-1">
+                {daysLeft > 0 ? (
+                  <>
+                    Expires in{" "}
+                    <span className="font-semibold">
+                      {daysLeft} days
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-red-600 font-semibold">
+                    Expired — upgrade again
+                  </span>
+                )}
+              </p>
+            )}
+
+            {/* Urgency warning */}
+            {daysLeft > 0 && daysLeft <= 3 && (
+              <p className="text-red-600 text-sm mt-1 font-semibold">
+                ⚠️ Expiring soon — renew now
+              </p>
+            )}
           </div>
 
+          {/* Applications */}
           <div className="bg-purple-50 rounded-xl p-4">
             <p className="text-sm text-gray-600">
               Applications
@@ -105,7 +159,9 @@ const getPlanName = (user) => {
 
         </div>
 
-        {/* PROFILE STRENGTH */}
+        {/* =========================
+            PROFILE STRENGTH
+        ========================= */}
         <div className="mt-8">
           <div className="flex justify-between text-sm font-semibold">
             <span>Profile Strength</span>
@@ -124,21 +180,21 @@ const getPlanName = (user) => {
           </p>
         </div>
 
-        {/* PROFILE SUMMARY */}
+        {/* =========================
+            PROFILE SUMMARY
+        ========================= */}
         <div className="mt-8 bg-gray-50 rounded-2xl p-5 border">
           <h2 className="text-xl font-bold">
             My Professional Profile
           </h2>
 
           <div className="grid md:grid-cols-2 gap-4 mt-4 text-sm">
-
             <p><strong>Location:</strong> {user?.location || "Not added"}</p>
             <p><strong>Skills:</strong> {user?.skills || "Not added"}</p>
             <p><strong>Experience:</strong> {user?.experience || "Not added"}</p>
             <p><strong>Education:</strong> {user?.education || "Not added"}</p>
             <p><strong>Expected Salary:</strong> {user?.expectedSalary || "Not added"}</p>
             <p><strong>Availability:</strong> {user?.availability || "Not added"}</p>
-
           </div>
 
           {/* ACTION BUTTONS */}
@@ -158,12 +214,13 @@ const getPlanName = (user) => {
               Upgrade Premium
             </Link>
 
-<Link
-  to="/payments"
-  className="bg-gray-800 text-white px-5 py-3 rounded-lg hover:bg-gray-900"
->
-  View Payments
-</Link>
+            <Link
+              to="/payments"
+              className="bg-gray-800 text-white px-5 py-3 rounded-lg hover:bg-gray-900"
+            >
+              View Payments
+            </Link>
+
             {user?.isVerified && (
               <span className="px-4 py-3 rounded-lg bg-blue-100 text-blue-700 font-semibold">
                 🔵 Verified
@@ -191,7 +248,9 @@ const getPlanName = (user) => {
 
       </div>
 
-      {/* APPLICATIONS */}
+      {/* =========================
+          APPLICATIONS
+      ========================= */}
       <div className="mt-10">
         <h2 className="text-2xl font-bold">
           My Applications
