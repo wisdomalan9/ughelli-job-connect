@@ -19,13 +19,17 @@ const createPayment = async (req, res, next) => {
     } = req.body;
 
     if (!type || !amount) {
-      res.status(400);
-      throw new Error("Type and amount required.");
+      return res.status(400).json({
+        success: false,
+        message: "Type and amount required.",
+      });
     }
 
     if (Number(amount) <= 0) {
-      res.status(400);
-      throw new Error("Invalid amount.");
+      return res.status(400).json({
+        success: false,
+        message: "Invalid amount.",
+      });
     }
 
     const payment = await Payment.create({
@@ -47,14 +51,18 @@ const createPayment = async (req, res, next) => {
       payment,
     });
   } catch (error) {
-    next(error);
+    console.error("CREATE PAYMENT ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create payment.",
+    });
   }
 };
 
 /* =========================
    MY PAYMENTS
 ========================= */
-const myPayments = async (req, res, next) => {
+const myPayments = async (req, res) => {
   try {
     const payments = await Payment.find({
       userId: req.user._id,
@@ -66,14 +74,18 @@ const myPayments = async (req, res, next) => {
       payments,
     });
   } catch (error) {
-    next(error);
+    console.error("MY PAYMENTS ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch payments.",
+    });
   }
 };
 
 /* =========================
    ALL PAYMENTS (ADMIN)
 ========================= */
-const allPayments = async (req, res, next) => {
+const allPayments = async (req, res) => {
   try {
     const payments = await Payment.find()
       .populate("userId", "fullName email role premiumPlan")
@@ -85,32 +97,45 @@ const allPayments = async (req, res, next) => {
       payments,
     });
   } catch (error) {
-    next(error);
+    console.error("ALL PAYMENTS ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch payments.",
+    });
   }
 };
 
 /* =========================
-   APPROVE PAYMENT
+   APPROVE PAYMENT (FINAL)
 ========================= */
-const approvePayment = async (req, res, next) => {
+const approvePayment = async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id);
 
     if (!payment) {
-      res.status(404);
-      throw new Error("Payment not found.");
+      return res.status(404).json({
+        success: false,
+        message: "Payment not found.",
+      });
     }
 
     if (payment.status === "approved") {
-      res.status(400);
-      throw new Error("Already approved.");
+      return res.status(400).json({
+        success: false,
+        message: "Already approved.",
+      });
     }
 
     if (payment.status === "rejected") {
-      res.status(400);
-      throw new Error("Rejected payment cannot be approved.");
+      return res.status(400).json({
+        success: false,
+        message: "Rejected payment cannot be approved.",
+      });
     }
 
+    /* =========================
+       UPDATE PAYMENT
+    ========================= */
     payment.status = "approved";
     payment.approvedBy = req.user._id;
     payment.approvedAt = new Date();
@@ -118,60 +143,55 @@ const approvePayment = async (req, res, next) => {
 
     await payment.save();
 
+    /* =========================
+       UPDATE USER (SAFE + FINAL)
+    ========================= */
     const user = await User.findById(payment.userId);
 
-    /* =========================
-       PREMIUM LOGIC (UPDATED)
-    ========================= */
-if (user) {
-  const rawPlan =
-    (payment.planName || payment.type || "").toLowerCase();
+    if (user) {
+      const rawPlan =
+        (payment.planName || payment.type || "").toLowerCase();
 
-  let plan = "free";
-  let duration = 30;
+      let plan = null;
+      let duration = 30;
+      let isElite = false;
 
-  if (rawPlan.includes("plus")) {
-    plan = "plus";
-    duration = 30;
-  }
+      if (rawPlan.includes("plus")) {
+        plan = "plus";
+      }
 
-  if (rawPlan.includes("premium")) {
-    plan = "premium";
-    duration = 30;
-  }
+      if (rawPlan.includes("premium")) {
+        plan = "premium";
+      }
 
-  if (rawPlan.includes("elite")) {
-    plan = "elite";
-    duration = 60;
-  }
+      if (rawPlan.includes("elite")) {
+        plan = "premium"; // IMPORTANT: elite uses premium plan
+        duration = 60;
+        isElite = true;
+      }
 
-  // Only upgrade if it's a plan payment
-  if (plan !== "free") {
-    const now = new Date();
-    const expiry = new Date(
-      now.getTime() + duration * 24 * 60 * 60 * 1000
-    );
+      if (plan) {
+        const now = new Date();
+        const expiry = new Date(
+          now.getTime() + duration * 24 * 60 * 60 * 1000
+        );
 
-    user.premiumPlan = plan;
-    user.premiumExpiresAt = expiry;
+        user.premiumPlan = plan;
+        user.premiumExpiresAt = expiry;
 
-    // Optional bonuses
-    if (plan === "plus") {
-      user.freeApplicationsLeft += 10;
+        // SAFE increment
+        user.freeApplicationsLeft =
+          (user.freeApplicationsLeft || 0) +
+          (plan === "plus" ? 10 : 25);
+
+        if (isElite) {
+          user.eliteVerified = true;
+        }
+
+        await user.save();
+      }
     }
 
-    if (plan === "premium") {
-      user.freeApplicationsLeft += 25;
-    }
-
-    if (plan === "elite") {
-      user.freeApplicationsLeft += 50;
-      user.eliteVerified = true;
-    }
-
-    await user.save();
-  }
-}
     /* =========================
        JOB LOGIC
     ========================= */
@@ -196,25 +216,33 @@ if (user) {
       message: "Payment approved and user upgraded.",
     });
   } catch (error) {
-    next(error);
+    console.error("APPROVE ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to approve payment.",
+    });
   }
 };
 
 /* =========================
    REJECT PAYMENT
 ========================= */
-const rejectPayment = async (req, res, next) => {
+const rejectPayment = async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id);
 
     if (!payment) {
-      res.status(404);
-      throw new Error("Payment not found.");
+      return res.status(404).json({
+        success: false,
+        message: "Payment not found.",
+      });
     }
 
     if (payment.status === "approved") {
-      res.status(400);
-      throw new Error("Approved payment cannot be rejected.");
+      return res.status(400).json({
+        success: false,
+        message: "Approved payment cannot be rejected.",
+      });
     }
 
     payment.status = "rejected";
@@ -227,14 +255,18 @@ const rejectPayment = async (req, res, next) => {
       message: "Payment rejected.",
     });
   } catch (error) {
-    next(error);
+    console.error("REJECT ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to reject payment.",
+    });
   }
 };
 
 /* =========================
    PAYMENT STATS
 ========================= */
-const paymentStats = async (req, res, next) => {
+const paymentStats = async (req, res) => {
   try {
     const approved = await Payment.find({ status: "approved" });
 
@@ -261,7 +293,11 @@ const paymentStats = async (req, res, next) => {
       },
     });
   } catch (error) {
-    next(error);
+    console.error("STATS ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to load stats.",
+    });
   }
 };
 
