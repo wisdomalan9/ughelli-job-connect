@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const requireActivePlan = require("../middleware/requireActivePlan");
 
 const {
   applyJob,
@@ -24,6 +25,7 @@ router.post(
   "/apply/:jobId",
   protect,
   seekerOnly,
+  requireActivePlan,
   applyJob
 );
 

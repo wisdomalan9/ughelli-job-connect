@@ -10,14 +10,16 @@ const applicationRoutes = require("./applicationRoutes");
 const paymentRoutes = require("./paymentRoutes");
 const adminRoutes = require("./adminRoutes");
 
+/* ✅ NEW */
+const notificationRoutes = require("./notificationRoutes");
+
 /* =========================
    HEALTH CHECK
 ========================= */
 router.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message:
-      "Ughelli Job Connect API Running",
+    message: "Ughelli Job Connect API Running",
     version: "1.0.0",
   });
 });
@@ -25,30 +27,18 @@ router.get("/", (req, res) => {
 /* =========================
    ROUTE MOUNTS
 ========================= */
-router.use(
-  "/auth",
-  authRoutes
-);
+router.use("/auth", authRoutes);
 
-router.use(
-  "/jobs",
-  jobRoutes
-);
+router.use("/jobs", jobRoutes);
 
-router.use(
-  "/applications",
-  applicationRoutes
-);
+router.use("/applications", applicationRoutes);
 
-router.use(
-  "/payments",
-  paymentRoutes
-);
+router.use("/payments", paymentRoutes);
 
-router.use(
-  "/admin",
-  adminRoutes
-);
+router.use("/admin", adminRoutes);
+
+/* ✅ NEW ROUTE */
+router.use("/notifications", notificationRoutes);
 
 /* =========================
    UNKNOWN API ROUTE
@@ -56,10 +46,8 @@ router.use(
 router.use((req, res) => {
   res.status(404).json({
     success: false,
-    message:
-      "API route not found.",
+    message: "API route not found.",
   });
 });
 
-module.exports =
-  router;
+module.exports = router;

@@ -5,6 +5,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
 const rateLimit = require("express-rate-limit");
+const path = require("path");
 
 const connectDB = require("./config/db");
 const apiRoutes = require("./routes");
@@ -51,23 +52,20 @@ app.use(compression());
 /* =========================
    RATE LIMIT
 ========================= */
-const limiter =
-  rateLimit({
-    windowMs:
-      15 * 60 * 1000,
-    max:
-      process.env.NODE_ENV ===
-      "production"
-        ? 250
-        : 1000,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: {
-      success: false,
-      message:
-        "Too many requests. Try again later.",
-    },
-  });
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max:
+    process.env.NODE_ENV === "production"
+      ? 250
+      : 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message:
+      "Too many requests. Try again later.",
+  },
+});
 
 app.use(limiter);
 
@@ -88,6 +86,16 @@ app.use(
 );
 
 /* =========================
+   STATIC FILES (UPLOADS)
+========================= */
+app.use(
+  "/uploads",
+  express.static(
+    path.join(__dirname, "../uploads")
+  )
+);
+
+/* =========================
    ROOT
 ========================= */
 app.get("/", (req, res) => {
@@ -95,18 +103,14 @@ app.get("/", (req, res) => {
     success: true,
     name: "Ughelli Job Connect API",
     status: "running",
-    env:
-      process.env.NODE_ENV,
+    env: process.env.NODE_ENV,
   });
 });
 
 /* =========================
    API
 ========================= */
-app.use(
-  "/api/v1",
-  apiRoutes
-);
+app.use("/api/v1", apiRoutes);
 
 /* =========================
    404
@@ -114,8 +118,7 @@ app.use(
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message:
-      "Route not found.",
+    message: "Route not found.",
   });
 });
 
@@ -128,8 +131,7 @@ app.use(errorHandler);
    START SERVER
 ========================= */
 const PORT =
-  process.env.PORT ||
-  5000;
+  process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(

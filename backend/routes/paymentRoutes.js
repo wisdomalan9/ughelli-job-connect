@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 
+/* =========================
+   CONTROLLERS
+========================= */
 const {
   createPayment,
   myPayments,
@@ -10,19 +13,29 @@ const {
   paymentStats,
 } = require("../controllers/paymentController");
 
+/* =========================
+   MIDDLEWARE
+========================= */
 const {
   protect,
   adminOnly,
 } = require("../middleware/auth");
 
+const {
+  upload,
+  handleUploadError,
+} = require("../middleware/upload");
+
 /* =========================
    USER ROUTES
 ========================= */
 
-/* Submit payment */
+/* Submit payment (WITH RECEIPT UPLOAD) */
 router.post(
   "/",
   protect,
+  upload.single("receipt"),
+  handleUploadError,
   createPayment
 );
 
@@ -69,5 +82,4 @@ router.put(
   rejectPayment
 );
 
-module.exports =
-  router;
+module.exports = router;

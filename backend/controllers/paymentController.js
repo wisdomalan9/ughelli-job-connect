@@ -2,10 +2,13 @@ const Payment = require("../models/Payment");
 const User = require("../models/User");
 const Job = require("../models/Job");
 
+/* ✅ NEW */
+const Notification = require("../models/Notification");
+
 /* =========================
    CREATE PAYMENT
 ========================= */
-const createPayment = async (req, res, next) => {
+const createPayment = async (req, res) => {
   try {
     const {
       type,
@@ -32,6 +35,10 @@ const createPayment = async (req, res, next) => {
       });
     }
 
+    const receiptImage = req.file
+      ? `/uploads/${req.file.filename}`
+      : "";
+
     const payment = await Payment.create({
       userId: req.user._id,
       type,
@@ -42,7 +49,16 @@ const createPayment = async (req, res, next) => {
       payerPhone: payerPhone || "",
       note: note || "",
       jobId: jobId || null,
+      receiptImage,
       status: "pending",
+    });
+
+    /* ✅ NOTIFY ADMIN */
+    await Notification.create({
+      userId: req.user._id,
+      title: "New Payment Submitted",
+      message: `New payment for ${planName || type} awaiting approval.`,
+      type: "payment",
     });
 
     res.status(201).json({
@@ -106,7 +122,7 @@ const allPayments = async (req, res) => {
 };
 
 /* =========================
-   APPROVE PAYMENT (FINAL)
+   APPROVE PAYMENT
 ========================= */
 const approvePayment = async (req, res) => {
   try {
@@ -133,9 +149,6 @@ const approvePayment = async (req, res) => {
       });
     }
 
-    /* =========================
-       UPDATE PAYMENT
-    ========================= */
     payment.status = "approved";
     payment.approvedBy = req.user._id;
     payment.approvedAt = new Date();
@@ -143,9 +156,6 @@ const approvePayment = async (req, res) => {
 
     await payment.save();
 
-    /* =========================
-       UPDATE USER (SAFE + FINAL)
-    ========================= */
     const user = await User.findById(payment.userId);
 
     if (user) {
@@ -165,7 +175,7 @@ const approvePayment = async (req, res) => {
       }
 
       if (rawPlan.includes("elite")) {
-        plan = "premium"; // IMPORTANT: elite uses premium plan
+        plan = "premium";
         duration = 60;
         isElite = true;
       }
@@ -179,22 +189,28 @@ const approvePayment = async (req, res) => {
         user.premiumPlan = plan;
         user.premiumExpiresAt = expiry;
 
-        // SAFE increment
+        const bonus = plan === "plus" ? 10 : 25;
+
         user.freeApplicationsLeft =
-          (user.freeApplicationsLeft || 0) +
-          (plan === "plus" ? 10 : 25);
+          (user.freeApplicationsLeft || 0) + bonus;
 
         if (isElite) {
           user.eliteVerified = true;
         }
 
         await user.save();
+
+        /* ✅ NOTIFY USER */
+        await Notification.create({
+          userId: user._id,
+          title: "Payment Approved",
+          message: `Your ${plan.toUpperCase()} plan is now active.`,
+          type: "payment",
+        });
       }
     }
 
-    /* =========================
-       JOB LOGIC
-    ========================= */
+    /* JOB LOGIC */
     if (payment.type === "job_post" && payment.jobId) {
       await Job.findByIdAndUpdate(payment.jobId, {
         status: "active",
@@ -246,9 +262,18 @@ const rejectPayment = async (req, res) => {
     }
 
     payment.status = "rejected";
-    payment.rejectionReason = req.body.reason || "Rejected";
+    payment.rejectionReason =
+      req.body.reason || "Rejected";
 
     await payment.save();
+
+    /* ✅ NOTIFY USER */
+    await Notification.create({
+      userId: payment.userId,
+      title: "Payment Rejected",
+      message: "Your payment was rejected. Please contact support.",
+      type: "payment",
+    });
 
     res.json({
       success: true,
@@ -268,15 +293,19 @@ const rejectPayment = async (req, res) => {
 ========================= */
 const paymentStats = async (req, res) => {
   try {
-    const approved = await Payment.find({ status: "approved" });
-
-    const pending = await Payment.countDocuments({
-      status: "pending",
+    const approved = await Payment.find({
+      status: "approved",
     });
 
-    const rejected = await Payment.countDocuments({
-      status: "rejected",
-    });
+    const pending =
+      await Payment.countDocuments({
+        status: "pending",
+      });
+
+    const rejected =
+      await Payment.countDocuments({
+        status: "rejected",
+      });
 
     const revenue = approved.reduce(
       (sum, item) => sum + item.amount,
