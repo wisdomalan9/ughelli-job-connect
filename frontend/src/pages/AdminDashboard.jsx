@@ -16,13 +16,9 @@ function AdminDashboard() {
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [viewedReceipts, setViewedReceipts] = useState([]);
 
-  /* FILTERS */
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
 
-  /* =========================
-     LOAD DATA
-  ========================= */
   const loadData = async () => {
     try {
       setLoading(true);
@@ -46,11 +42,9 @@ function AdminDashboard() {
     loadData();
   }, []);
 
-  /* =========================
-     ACTIONS
-  ========================= */
-  const approve = async (id) => {
-    if (!viewedReceipts.includes(id)) {
+  /* ✅ FIXED APPROVE */
+  const approve = async (id, item) => {
+    if (item.receiptImage && !viewedReceipts.includes(id)) {
       return alert("⚠️ You must view receipt before approving.");
     }
 
@@ -75,9 +69,6 @@ function AdminDashboard() {
     }
   };
 
-  /* =========================
-     IMAGE URL
-  ========================= */
   const getImageUrl = (path) => {
     if (!path) return "";
     return `${
@@ -85,9 +76,6 @@ function AdminDashboard() {
     }${path}`;
   };
 
-  /* =========================
-     VIEW RECEIPT
-  ========================= */
   const handleViewReceipt = (item) => {
     if (!item.receiptImage) {
       return alert("No receipt uploaded.");
@@ -100,9 +88,6 @@ function AdminDashboard() {
     }
   };
 
-  /* =========================
-     FILTER + SEARCH
-  ========================= */
   const filteredPayments = payments.filter((item) => {
     const matchFilter =
       filter === "all" || item.status === filter;
@@ -143,7 +128,6 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* ========================= STATS ========================= */}
       <div className="grid md:grid-cols-4 gap-4 mt-8">
         <Stat title="Revenue" value={`₦${stats.revenue}`} />
         <Stat title="Approved" value={stats.approved} />
@@ -151,7 +135,6 @@ function AdminDashboard() {
         <Stat title="Rejected" value={stats.rejected} />
       </div>
 
-      {/* ========================= FILTER ========================= */}
       <div className="mt-10 flex flex-col md:flex-row gap-4">
 
         <select
@@ -179,7 +162,6 @@ function AdminDashboard() {
 
       </div>
 
-      {/* ========================= PAYMENTS ========================= */}
       <div className="mt-8">
 
         {loading && (
@@ -207,7 +189,6 @@ function AdminDashboard() {
 
                 <div className="flex flex-col md:flex-row justify-between gap-5">
 
-                  {/* LEFT */}
                   <div>
                     <h3 className="font-bold text-lg">
                       {item.planName || item.type}
@@ -231,7 +212,6 @@ function AdminDashboard() {
                       Status: {item.status}
                     </p>
 
-                    {/* VIEW STATUS */}
                     {viewed && (
                       <p className="text-green-600 text-sm mt-1">
                         ✅ Receipt viewed
@@ -239,7 +219,6 @@ function AdminDashboard() {
                     )}
                   </div>
 
-                  {/* RIGHT */}
                   <div className="flex flex-col gap-3">
 
                     {item.receiptImage && (
@@ -255,15 +234,18 @@ function AdminDashboard() {
 
                     {item.status === "pending" && (
                       <div className="flex gap-2">
+
                         <button
                           onClick={() =>
-                            approve(item._id)
+                            approve(item._id, item)
                           }
-                          disabled={!viewed}
+                          disabled={
+                            item.receiptImage && !viewed
+                          }
                           className={`px-4 py-2 rounded-lg text-white ${
-                            viewed
-                              ? "bg-green-600"
-                              : "bg-gray-400 cursor-not-allowed"
+                            item.receiptImage && !viewed
+                              ? "bg-gray-400 cursor-not-allowed"
+                              : "bg-green-600"
                           }`}
                         >
                           Approve
@@ -277,6 +259,7 @@ function AdminDashboard() {
                         >
                           Reject
                         </button>
+
                       </div>
                     )}
 
@@ -291,7 +274,6 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* ========================= MODAL ========================= */}
       {selectedReceipt && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-xl max-w-lg w-full">
@@ -300,10 +282,6 @@ function AdminDashboard() {
               src={selectedReceipt}
               alt="Receipt"
               className="w-full rounded"
-              onError={(e) => {
-                e.target.src = "";
-                alert("Failed to load receipt image.");
-              }}
             />
 
             <button
@@ -323,7 +301,6 @@ function AdminDashboard() {
   );
 }
 
-/* ========================= SMALL COMPONENT ========================= */
 function Stat({ title, value }) {
   return (
     <div className="bg-white rounded-2xl shadow border p-5">

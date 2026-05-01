@@ -11,13 +11,11 @@ function Navbar() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  /* 🔥 FILTER */
   const [filter, setFilter] = useState("all");
 
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  /* 🔊 SOUND */
   const audioRef = useRef(null);
   const lastCountRef = useRef(0);
 
@@ -34,9 +32,7 @@ function Navbar() {
       ? "text-blue-700 font-semibold"
       : "text-gray-700 hover:text-blue-700";
 
-  /* =========================
-     LOAD NOTIFICATIONS
-  ========================= */
+  /* ========================= NOTIFICATIONS ========================= */
   const loadNotifications = async () => {
     try {
       const [listRes, countRes] = await Promise.all([
@@ -46,7 +42,6 @@ function Navbar() {
 
       const newCount = countRes.data.count || 0;
 
-      /* 🔊 SOUND ALERT */
       if (newCount > lastCountRef.current) {
         audioRef.current?.play();
       }
@@ -60,24 +55,15 @@ function Navbar() {
     }
   };
 
-  /* =========================
-     AUTO REFRESH (2s)
-  ========================= */
   useEffect(() => {
     if (!isAuthenticated) return;
 
     loadNotifications();
 
-    const interval = setInterval(() => {
-      loadNotifications();
-    }, 2000);
-
+    const interval = setInterval(loadNotifications, 2000);
     return () => clearInterval(interval);
   }, [isAuthenticated]);
 
-  /* =========================
-     MARK READ
-  ========================= */
   const markAsRead = async (id) => {
     try {
       await api.put(`/notifications/${id}/read`);
@@ -85,9 +71,6 @@ function Navbar() {
     } catch {}
   };
 
-  /* =========================
-     FILTER LOGIC
-  ========================= */
   const filteredNotifications = notifications.filter((n) => {
     if (filter === "all") return true;
     return n.type === filter;
@@ -96,60 +79,56 @@ function Navbar() {
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
 
-      {/* 🔊 SOUND FILE */}
       <audio ref={audioRef} src="/notification.mp3" preload="auto" />
 
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
 
         <Link to="/" onClick={closeMenu} className="flex items-center gap-3">
-          <img src={logo} alt="Ughelli Job Connect" className="h-12" />
+          <img src={logo} alt="logo" className="h-10" />
         </Link>
 
-        {/* Desktop */}
+        {/* DESKTOP */}
         <nav className="hidden md:flex gap-5 items-center">
 
           <NavLink to="/" className={navClass}>Home</NavLink>
           <NavLink to="/jobs" className={navClass}>Jobs</NavLink>
 
-          {/* 🔔 NOTIFICATIONS */}
+          {/* 🔔 NOTIFICATION */}
           {isAuthenticated && (
             <div className="relative">
 
               <button
                 onClick={() => setNotifOpen(!notifOpen)}
-                className="relative text-xl"
+                className="text-xl relative"
               >
                 🔔
 
                 {unreadCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs px-2 py-0.5 rounded-full">
+                  <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs px-2 rounded-full">
                     {unreadCount}
                   </span>
                 )}
               </button>
 
               {notifOpen && (
-                <div className="absolute right-0 mt-3 w-96 bg-white border rounded-xl shadow-lg z-50 max-h-[400px] overflow-y-auto">
+                <div className="absolute right-0 mt-3 w-80 bg-white border rounded-xl shadow-lg max-h-96 overflow-y-auto z-50">
 
-                  {/* HEADER */}
-                  <div className="p-3 border-b font-semibold flex justify-between items-center">
+                  <div className="p-3 font-bold border-b flex justify-between">
                     Notifications
 
-                    {/* FILTER */}
                     <select
                       value={filter}
                       onChange={(e) => setFilter(e.target.value)}
-                      className="text-xs border rounded px-2 py-1"
+                      className="text-xs border px-2 rounded"
                     >
                       <option value="all">All</option>
                       <option value="payment">Payments</option>
                       <option value="job">Jobs</option>
-                      <option value="system">System</option>
                     </select>
                   </div>
 
                   {filteredNotifications.length === 0 && (
-                    <div className="p-4 text-center text-gray-500">
+                    <div className="p-4 text-gray-500 text-center">
                       No notifications
                     </div>
                   )}
@@ -158,16 +137,12 @@ function Navbar() {
                     <div
                       key={n._id}
                       onClick={() => markAsRead(n._id)}
-                      className={`p-3 border-b cursor-pointer hover:bg-gray-50 ${
+                      className={`p-3 border-b cursor-pointer ${
                         !n.isRead ? "bg-blue-50" : ""
                       }`}
                     >
-                      <p className="font-semibold text-sm">
-                        {n.title}
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        {n.message}
-                      </p>
+                      <p className="font-semibold text-sm">{n.title}</p>
+                      <p className="text-xs text-gray-600">{n.message}</p>
                     </div>
                   ))}
                 </div>
@@ -185,7 +160,7 @@ function Navbar() {
           )}
         </nav>
 
-        {/* Mobile Toggle */}
+        {/* MOBILE BUTTON */}
         <button
           onClick={() => setOpen(!open)}
           className="md:hidden text-2xl"
@@ -193,9 +168,32 @@ function Navbar() {
           ☰
         </button>
       </div>
+
+      {/* 🔥 MOBILE MENU (THIS WAS MISSING) */}
+      {open && (
+        <div className="md:hidden bg-white border-t px-4 py-4 space-y-3">
+
+          <NavLink to="/" onClick={closeMenu} className={navClass}>
+            Home
+          </NavLink>
+
+          <NavLink to="/jobs" onClick={closeMenu} className={navClass}>
+            Jobs
+          </NavLink>
+
+          {isAuthenticated && (
+            <button
+              onClick={handleLogout}
+              className="w-full bg-blue-700 text-white py-2 rounded-lg"
+            >
+              Logout
+            </button>
+          )}
+        </div>
+      )}
+
     </header>
   );
 }
 
 export default Navbar;
-
