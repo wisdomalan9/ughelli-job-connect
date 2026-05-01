@@ -89,10 +89,14 @@ function AdminDashboard() {
      VIEW RECEIPT
   ========================= */
   const handleViewReceipt = (item) => {
+    if (!item.receiptImage) {
+      return alert("No receipt uploaded.");
+    }
+
     setSelectedReceipt(getImageUrl(item.receiptImage));
 
     if (!viewedReceipts.includes(item._id)) {
-      setViewedReceipts([...viewedReceipts, item._id]);
+      setViewedReceipts((prev) => [...prev, item._id]);
     }
   };
 
@@ -139,9 +143,7 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* =========================
-          STATS
-      ========================= */}
+      {/* ========================= STATS ========================= */}
       <div className="grid md:grid-cols-4 gap-4 mt-8">
         <Stat title="Revenue" value={`₦${stats.revenue}`} />
         <Stat title="Approved" value={stats.approved} />
@@ -149,9 +151,7 @@ function AdminDashboard() {
         <Stat title="Rejected" value={stats.rejected} />
       </div>
 
-      {/* =========================
-          FILTER + SEARCH
-      ========================= */}
+      {/* ========================= FILTER ========================= */}
       <div className="mt-10 flex flex-col md:flex-row gap-4">
 
         <select
@@ -179,9 +179,7 @@ function AdminDashboard() {
 
       </div>
 
-      {/* =========================
-          PAYMENTS
-      ========================= */}
+      {/* ========================= PAYMENTS ========================= */}
       <div className="mt-8">
 
         {loading && (
@@ -198,98 +196,114 @@ function AdminDashboard() {
 
         <div className="grid gap-5">
 
-          {filteredPayments.map((item) => (
-            <div
-              key={item._id}
-              className="bg-white rounded-2xl shadow border p-6"
-            >
+          {filteredPayments.map((item) => {
+            const viewed = viewedReceipts.includes(item._id);
 
-              <div className="flex flex-col md:flex-row justify-between gap-5">
+            return (
+              <div
+                key={item._id}
+                className="bg-white rounded-2xl shadow border p-6"
+              >
 
-                {/* LEFT */}
-                <div>
-                  <h3 className="font-bold text-lg">
-                    {item.planName || item.type}
-                  </h3>
+                <div className="flex flex-col md:flex-row justify-between gap-5">
 
-                  <p className="text-gray-600">
-                    ₦{item.amount}
-                  </p>
+                  {/* LEFT */}
+                  <div>
+                    <h3 className="font-bold text-lg">
+                      {item.planName || item.type}
+                    </h3>
 
-                  <p className="text-sm text-gray-500">
-                    Ref: {item.reference || "N/A"}
-                  </p>
+                    <p className="text-gray-600">
+                      ₦{item.amount}
+                    </p>
 
-                  {/* USER INFO */}
-                  <div className="mt-2 text-sm text-gray-600">
-                    👤 {item.userId?.fullName || "Unknown"}
-                    <br />
-                    📧 {item.userId?.email || "N/A"}
+                    <p className="text-sm text-gray-500">
+                      Ref: {item.reference || "N/A"}
+                    </p>
+
+                    <div className="mt-2 text-sm text-gray-600">
+                      👤 {item.userId?.fullName || "Unknown"}
+                      <br />
+                      📧 {item.userId?.email || "N/A"}
+                    </div>
+
+                    <p className="text-sm mt-2">
+                      Status: {item.status}
+                    </p>
+
+                    {/* VIEW STATUS */}
+                    {viewed && (
+                      <p className="text-green-600 text-sm mt-1">
+                        ✅ Receipt viewed
+                      </p>
+                    )}
                   </div>
 
-                  <p className="text-sm mt-2">
-                    Status: {item.status}
-                  </p>
-                </div>
+                  {/* RIGHT */}
+                  <div className="flex flex-col gap-3">
 
-                {/* RIGHT */}
-                <div className="flex flex-col gap-3">
-
-                  {/* VIEW RECEIPT */}
-                  {item.receiptImage && (
-                    <button
-                      onClick={() =>
-                        handleViewReceipt(item)
-                      }
-                      className="bg-black text-white px-4 py-2 rounded-lg"
-                    >
-                      View Receipt
-                    </button>
-                  )}
-
-                  {/* ACTIONS */}
-                  {item.status === "pending" && (
-                    <div className="flex gap-2">
+                    {item.receiptImage && (
                       <button
                         onClick={() =>
-                          approve(item._id)
+                          handleViewReceipt(item)
                         }
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg"
+                        className="bg-black text-white px-4 py-2 rounded-lg"
                       >
-                        Approve
+                        View Receipt
                       </button>
+                    )}
 
-                      <button
-                        onClick={() =>
-                          reject(item._id)
-                        }
-                        className="bg-red-600 text-white px-4 py-2 rounded-lg"
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  )}
+                    {item.status === "pending" && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() =>
+                            approve(item._id)
+                          }
+                          disabled={!viewed}
+                          className={`px-4 py-2 rounded-lg text-white ${
+                            viewed
+                              ? "bg-green-600"
+                              : "bg-gray-400 cursor-not-allowed"
+                          }`}
+                        >
+                          Approve
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            reject(item._id)
+                          }
+                          className="bg-red-600 text-white px-4 py-2 rounded-lg"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )}
+
+                  </div>
 
                 </div>
 
               </div>
-
-            </div>
-          ))}
+            );
+          })}
 
         </div>
       </div>
 
-      {/* =========================
-          RECEIPT MODAL
-      ========================= */}
+      {/* ========================= MODAL ========================= */}
       {selectedReceipt && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-xl max-w-lg w-full">
+
             <img
               src={selectedReceipt}
               alt="Receipt"
               className="w-full rounded"
+              onError={(e) => {
+                e.target.src = "";
+                alert("Failed to load receipt image.");
+              }}
             />
 
             <button
@@ -300,6 +314,7 @@ function AdminDashboard() {
             >
               Close
             </button>
+
           </div>
         </div>
       )}
@@ -308,9 +323,7 @@ function AdminDashboard() {
   );
 }
 
-/* =========================
-   SMALL COMPONENT
-========================= */
+/* ========================= SMALL COMPONENT ========================= */
 function Stat({ title, value }) {
   return (
     <div className="bg-white rounded-2xl shadow border p-5">
