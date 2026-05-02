@@ -64,11 +64,25 @@ function Navbar() {
     return () => clearInterval(interval);
   }, [isAuthenticated]);
 
-  const markAsRead = async (id) => {
+  /* 🔥 NEW SMART HANDLER */
+  const handleNotificationClick = async (n) => {
     try {
-      await api.put(`/notifications/${id}/read`);
+      await api.put(`/notifications/${n._id}/read`);
+
+      // Smart navigation
+      if (n.type === "payment") {
+        navigate("/admin");
+      } else if (n.type === "job" && n.jobId) {
+        navigate(`/jobs/${n.jobId}`);
+      } else {
+        navigate("/dashboard");
+      }
+
+      setNotifOpen(false);
       loadNotifications();
-    } catch {}
+    } catch (err) {
+      console.log("Notification click error", err);
+    }
   };
 
   const filteredNotifications = notifications.filter((n) => {
@@ -136,7 +150,7 @@ function Navbar() {
                   {filteredNotifications.map((n) => (
                     <div
                       key={n._id}
-                      onClick={() => markAsRead(n._id)}
+                      onClick={() => handleNotificationClick(n)}
                       className={`p-3 border-b cursor-pointer ${
                         !n.isRead ? "bg-blue-50" : ""
                       }`}
@@ -169,7 +183,7 @@ function Navbar() {
         </button>
       </div>
 
-      {/* 🔥 MOBILE MENU (THIS WAS MISSING) */}
+      {/* MOBILE MENU */}
       {open && (
         <div className="md:hidden bg-white border-t px-4 py-4 space-y-3">
 
